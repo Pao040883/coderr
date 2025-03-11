@@ -1,0 +1,5 @@
+# SQLite-Datenbank ignorieren
+*.sqlite3
+*.sqlite
+*.db
+*.db-journal
