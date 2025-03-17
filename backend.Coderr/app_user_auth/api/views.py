@@ -83,7 +83,7 @@ class RegistrationView(generics.CreateAPIView):
                 "token": token.key, 
                 "username": user.username,
                 "email": user.email,
-                "user_ide": user.id,
+                "user_id": user.id,
             }, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
