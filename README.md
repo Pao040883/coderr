@@ -22,8 +22,8 @@ The Coderr Backend provides the API for the Coderr platform. It enables the mana
 ### Clone project & install dependencies
 
 ```bash
-git clone https://github.com/MaxLackmann/coderr-backend.git
-cd coderr-backend
+git clone https://github.com/Pao040883/coderr
+cd backend.Coderr
 python -m venv venv
 source venv/bin/activate  # Mac/Linux
 venv\Scripts\activate      # Windows
