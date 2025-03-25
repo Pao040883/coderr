@@ -16,17 +16,17 @@ class ProfileViewSet(viewsets.GenericViewSet):
     """
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        """Filtert, damit Benutzer nur ihr eigenes Profil sehen können."""
-        return Profile.objects.filter(id=self.request.user.id)
+    # def get_queryset(self):
+
+        # return Profile.objects.filter(id=self.request.user.id)
 
     def retrieve(self, request, pk=None):
         """Holt ein einzelnes Profil anhand der ID (pk)."""
         profile = self.get_queryset().filter(id=pk).first()
         if not profile:
-            return Response({"error": "Profil nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Das Benutzerprofil wurde nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = ProfileSerializer(profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -35,7 +35,7 @@ class ProfileViewSet(viewsets.GenericViewSet):
         """Erlaubt das teilweise Aktualisieren eines Profils (PATCH)."""
         profile = self.get_queryset().filter(id=pk).first()
         if not profile:
-            return Response({"error": "Profil nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Das Benutzerprofil wurde nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
 
         if profile.id != request.user.id:
             return Response({"error": "Sie dürfen nur Ihr eigenes Profil bearbeiten."},
@@ -54,7 +54,8 @@ class BusinessProfileListView(ListAPIView):
     """
     queryset = Profile.objects.filter(type="business")
     serializer_class = BusinessProfileSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class CustomerProfileListView(ListAPIView):
@@ -63,7 +64,8 @@ class CustomerProfileListView(ListAPIView):
     """
     queryset = Profile.objects.filter(type="customer")
     serializer_class = CustomerProfileSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+    pagination_class = None
 
 
 class RegistrationView(generics.CreateAPIView):

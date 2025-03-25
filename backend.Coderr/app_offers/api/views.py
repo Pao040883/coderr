@@ -1,13 +1,30 @@
-from rest_framework import viewsets, generics
+from rest_framework import viewsets, generics, filters
 from ..models import Offer, DetailOffer
 from .serializers import OfferListSerializer, OfferCreateSerializer, OfferDetailSerializer
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
+from app_offers.api.filters import OffersFilter
+from .permissions import IsBusinessUser, IsOwner
+from rest_framework.pagination import PageNumberPagination
 
+class OfferPagination(PageNumberPagination):
+    page_size_query_param = 'page_size'
 
 class OfferView(viewsets.ModelViewSet):
-    queryset = Offer.objects.all()
-    permission_classes = [IsAuthenticated]
+    queryset = Offer.objects.all().order_by('-updated_at')
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_class = OffersFilter
+    ordering_fields = ['updated_at', 'min_price']
+    search_fields = ['title', 'description']
+    pagination_class = OfferPagination
 
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticatedOrReadOnly(), IsBusinessUser()]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAuthenticatedOrReadOnly(), IsOwner()]
+        return [IsAuthenticatedOrReadOnly()]
+    
     def get_serializer_class(self):
         if self.action == ['list', 'retrieve']: 
             return OfferListSerializer
@@ -23,4 +40,4 @@ class OfferView(viewsets.ModelViewSet):
 class OfferDetailView(generics.RetrieveAPIView):
     queryset = DetailOffer.objects.all()
     serializer_class = OfferDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]

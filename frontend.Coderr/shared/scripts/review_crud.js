@@ -102,7 +102,7 @@ function countStars() {
 }
 
 function meanValueReviews() {
-    sum = 0;
+    sum = 0;   
     currentReviews.forEach(rev => {
         sum += parseFloat(rev.rating)
     });

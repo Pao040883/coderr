@@ -15,5 +15,5 @@ router.register(r'offers', OfferView, basename='offer')
 
 urlpatterns = [
     path('', include(router.urls)), 
-    path('offerdetails/<int:pk>', OfferDetailView.as_view()) 
+    path('offerdetails/<int:pk>/', OfferDetailView.as_view(), name='offerdetails') 
 ]
