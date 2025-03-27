@@ -77,28 +77,19 @@ class RegistrationView(generics.CreateAPIView):
     
 
 class LoginView(generics.GenericAPIView):
-
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data["username"]
-            password = serializer.validated_data["password"]
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            user = authenticate(username=username, password=password)
+        user = serializer.validated_data["user"]
+        token, _ = Token.objects.get_or_create(user=user)
 
-            if user is None:
-                return Response({"error": "Ungültige Anmeldeinformationen"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Token generieren oder abrufen
-            token, created = Token.objects.get_or_create(user=user)
-
-            return Response({
-                "token": token.key,
-                "username": user.username,
-                "email": user.email,
-                "user_id": user.id
-            }, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "token": token.key,
+            "username": user.username,
+            "email": user.email,
+            "user_id": user.id
+        }, status=status.HTTP_200_OK)

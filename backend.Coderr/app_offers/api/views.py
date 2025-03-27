@@ -21,13 +21,13 @@ class OfferView(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'create':
-            return [IsAuthenticatedOrReadOnly(), IsBusinessUser()]
+            return [IsBusinessUser()]
         elif self.action in ['update', 'partial_update', 'destroy']:
-            return [IsAuthenticatedOrReadOnly(), IsOwner()]
+            return [IsOwner()]
         return [IsAuthenticatedOrReadOnly()]
     
     def get_serializer_class(self):
-        if self.action == ['list', 'retrieve']: 
+        if self.action in ['list', 'retrieve']: 
             return OfferListSerializer
         elif self.action in ['create', 'update', 'partial_update']: 
             return OfferCreateSerializer

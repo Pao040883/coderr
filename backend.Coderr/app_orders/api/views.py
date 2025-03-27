@@ -7,27 +7,24 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsCustomerUser, IsBusinessUser, IsBusinessOrderOwner, IsStaff
+from .permissions import IsCustomerUser, IsBusinessOrderOwner, IsStaff
 from django.db import models
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    pagination_class = None
 
     def get_queryset(self):
         user = self.request.user
         return Order.objects.filter(models.Q(customer_user=user) | models.Q(business_user=user))
 
     def get_permissions(self):
-        if self.action == 'list':
-            return [IsAuthenticated(), IsBusinessOrderOwner()]
+        if self.action in ['list', 'partial_update']:
+            return [IsBusinessOrderOwner()]
         elif self.action == 'create':
-            return [IsAuthenticated(), IsCustomerUser()]
-        elif self.action in ['partial_update']:
-            return [IsAuthenticated(), IsBusinessUser()]
+            return [IsCustomerUser()]
         elif self.action in ['destroy']:
-            return [IsAuthenticated(), IsStaff()]
+            return [IsStaff()]
         return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):

@@ -107,5 +107,42 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+
+    GUEST_USERS = {
+        "andrey": {"password": "asdasd", "type": "customer"},
+        "kevin": {"password": "asdasd24", "type": "business"},
+    }
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        # Gastnutzer
+        if username in self.GUEST_USERS:
+            guest = self.GUEST_USERS[username]
+            if password == guest["password"]:
+                user, _ = Profile.objects.get_or_create(
+                    username=username,
+                    defaults={
+                        "email": f"{username}@guest.com",
+                        "type": guest["type"]
+                    }
+                )
+                attrs["user"] = user
+                return attrs
+            else:
+                raise serializers.ValidationError({"detail": ["Gast-Passwort falsch"]})
+
+        # Normale Benutzerprüfung
+        try:
+            user = Profile.objects.get(username=username)
+        except Profile.DoesNotExist:
+            raise serializers.ValidationError({"detail": ["Benutzer existiert nicht"]})
+
+        if not user.check_password(password):
+            raise serializers.ValidationError({"detail": ["Passwort ist falsch"]})
+
+        attrs['user'] = user
+        return attrs
