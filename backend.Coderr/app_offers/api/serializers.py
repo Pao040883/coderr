@@ -5,8 +5,7 @@ from rest_framework.reverse import reverse
 
 
 class UserMixin(serializers.Serializer):
-    """Mixin to add a user field with structured output."""
-    
+   
     user_details = serializers.SerializerMethodField()
 
     def get_user_details(self, obj):

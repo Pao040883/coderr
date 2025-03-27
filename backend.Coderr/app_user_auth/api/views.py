@@ -10,20 +10,11 @@ from django.contrib.auth import authenticate
 
 
 class ProfileViewSet(viewsets.GenericViewSet):
-    """
-    ViewSet für das Profile-Modell.
-    Erlaubt das Abrufen und Bearbeiten eines Profils.
-    """
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    # permission_classes = [IsAuthenticated]
-
-    # def get_queryset(self):
-
-        # return Profile.objects.filter(id=self.request.user.id)
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, pk=None):
-        """Holt ein einzelnes Profil anhand der ID (pk)."""
         profile = self.get_queryset().filter(id=pk).first()
         if not profile:
             return Response({"error": "Das Benutzerprofil wurde nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
@@ -32,7 +23,6 @@ class ProfileViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, pk=None):
-        """Erlaubt das teilweise Aktualisieren eines Profils (PATCH)."""
         profile = self.get_queryset().filter(id=pk).first()
         if not profile:
             return Response({"error": "Das Benutzerprofil wurde nicht gefunden."}, status=status.HTTP_404_NOT_FOUND)
@@ -49,23 +39,19 @@ class ProfileViewSet(viewsets.GenericViewSet):
 
 
 class BusinessProfileListView(ListAPIView):
-    """
-    API-Endpoint für alle Business-Profile.
-    """
-    queryset = Profile.objects.filter(type="business")
     serializer_class = BusinessProfileSerializer
-    # permission_classes = [IsAuthenticated]
-    pagination_class = None
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Profile.objects.filter(type='business')
 
 
 class CustomerProfileListView(ListAPIView):
-    """
-    API-Endpoint für alle Kunden-Profile.
-    """
-    queryset = Profile.objects.filter(type="customer")
     serializer_class = CustomerProfileSerializer
-    # permission_classes = [IsAuthenticated]
-    pagination_class = None
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Profile.objects.filter(type='customer')
 
 
 class RegistrationView(generics.CreateAPIView):
@@ -73,7 +59,6 @@ class RegistrationView(generics.CreateAPIView):
     serializer_class = RegistrationSerializer
 
     def create(self, request, *args, **kwargs):
-        """Erweiterte Registrierung, die das gespeicherte Profil und optional ein Token zurückgibt."""
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -96,7 +81,6 @@ class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request, *args, **kwargs):
-        """Authentifiziert den Benutzer und gibt ein Token zurück."""
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data["username"]

@@ -5,7 +5,7 @@ import re
 
 class ProfileSerializer(serializers.ModelSerializer):
     
-    user = serializers.IntegerField(source='id', read_only=True)  # Behält 'user' als Alias für 'id' bei
+    user = serializers.IntegerField(source='id', read_only=True) 
 
     class Meta:
         model = Profile
@@ -40,35 +40,39 @@ class ProfileSerializer(serializers.ModelSerializer):
         return tel
 
 
-class UserMixin(serializers.Serializer):
-    """Mixin to add a user field with structured output."""
-    
-    user = serializers.SerializerMethodField()
-
-    def get_user(self, obj):
-        """Returns structured user data with 'user' as the key instead of 'id'."""
-        return {
-            "user": obj.id,  # Hier bleibt das Feld als 'user' statt 'id'
-            "username": obj.username,
-            "first_name": obj.first_name or "",
-            "last_name": obj.last_name or ""
-        }
-
-
-class BusinessProfileSerializer(UserMixin, serializers.ModelSerializer):
-    """Serializer for business profiles."""
+class BusinessProfileSerializer(serializers.ModelSerializer):
+    user = serializers.IntegerField(source='id', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ['user', 'file', 'location', 'tel', 'description', 'working_hours', 'type']
+        fields = [
+            'user',
+            'username',
+            'first_name',
+            'last_name',
+            'file',
+            'location',
+            'tel',
+            'description',
+            'working_hours',
+            'type',
+        ]
 
 
-class CustomerProfileSerializer(UserMixin, serializers.ModelSerializer):
-    """Serializer for customer profiles."""
-    
+class CustomerProfileSerializer(serializers.ModelSerializer):
+    user = serializers.IntegerField(source='id', read_only=True)
+
     class Meta:
         model = Profile
-        fields = ['user', 'file', 'type']
+        fields = [
+            'user',
+            'username',
+            'first_name',
+            'last_name',
+            'file',
+            'created_at',
+            'type',
+        ]
 
 
 class RegistrationSerializer(serializers.ModelSerializer):

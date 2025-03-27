@@ -9,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 
 class OfferPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
+    page_size = 6
 
 class OfferView(viewsets.ModelViewSet):
     queryset = Offer.objects.all().order_by('-updated_at')
