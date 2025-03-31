@@ -12,7 +12,7 @@ class UserMixin(serializers.Serializer):
         return {
             "first_name": obj.user.first_name if obj.user else "",
             "last_name": obj.user.last_name if obj.user else "",
-            "email": obj.user.email if obj.user else "",
+            "username": obj.user.username if obj.user else "",
         }
 
 
@@ -34,7 +34,7 @@ class OfferListSerializer(UserMixin, serializers.ModelSerializer):
     def get_details(self, obj):
         request = self.context.get('request')
         return [
-            {"id": detail.id, "url": reverse("offer-detail", args=[detail.id], request=request)}
+            {"id": detail.id, "url": f"/offerdetails/{detail.id}/"}
             for detail in obj.details.all()
         ]
 

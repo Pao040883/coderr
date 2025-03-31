@@ -18,9 +18,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'create':
-            return [IsAuthenticated(), IsCustomerUser()]
+            return [IsCustomerUser()]
         elif self.action in ['update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsReviewer()]
+            return [IsReviewer()]
         return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
