@@ -1,7 +1,7 @@
 from rest_framework import viewsets, generics, filters
 from ..models import Offer, DetailOffer
-from .serializers import OfferListSerializer, OfferCreateSerializer, OfferDetailSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .serializers import OfferListSerializer, OfferCreateSerializer, OfferDetailSerializer, OfferSingleSerializer
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from app_offers.api.filters import OffersFilter
 from .permissions import IsBusinessUser, IsOwner
@@ -22,13 +22,17 @@ class OfferView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == 'create':
             return [IsBusinessUser()]
+        elif self.action == 'retrieve':
+            return [IsAuthenticated()]
         elif self.action in ['update', 'partial_update', 'destroy']:
             return [IsOwner()]
-        return [IsAuthenticatedOrReadOnly()]
+        return [AllowAny()]
     
     def get_serializer_class(self):
-        if self.action in ['list', 'retrieve']: 
+        if self.action in ['list']: 
             return OfferListSerializer
+        elif self.action in ['retrieve']: 
+            return OfferSingleSerializer
         elif self.action in ['create', 'update', 'partial_update']: 
             return OfferCreateSerializer
         return OfferListSerializer  

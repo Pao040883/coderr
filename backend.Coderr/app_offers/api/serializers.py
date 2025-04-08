@@ -56,6 +56,45 @@ class OfferListSerializer(UserMixin, serializers.ModelSerializer):
         
         return value
 
+class OfferSingleSerializer(UserMixin, serializers.ModelSerializer):
+
+    details = serializers.SerializerMethodField()
+    min_price = serializers.SerializerMethodField()
+    min_delivery_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Offer
+        fields = [
+            'id', 'user', 'title', 'image', 'description', 
+            'created_at', 'updated_at', 'details', 'min_price', 
+            'min_delivery_time', 'user_details'
+        ]
+    
+    def get_details(self, obj):
+        request = self.context.get('request')
+        return [
+            {"id": detail.id, "url": request.build_absolute_uri(f"/api/offerdetails/{detail.id}/") if request else f"/api/offerdetails/{detail.id}/"}
+            for detail in obj.details.all()
+        ]
+
+    def get_min_price(self, obj):
+        return obj.details.aggregate(Min("price"))["price__min"]
+
+    def get_min_delivery_time(self, obj):
+        return obj.details.aggregate(Min("delivery_time_in_days"))["delivery_time_in_days__min"]
+
+    def validate_details(self, value):
+        if len(value) != 3:
+            raise serializers.ValidationError({"detail": ["3 Details erforderlich"]})
+        
+        offer_types = {detail['offer_type'] for detail in value}
+        required_type = {'basic', 'standard', 'premium'}
+
+        if offer_types != required_type:
+            raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard und 1 Premium Details erforderlich"]})
+        
+        return value
+
 class OfferDetailSerializer(serializers.ModelSerializer):     
     class Meta:
         model = DetailOffer

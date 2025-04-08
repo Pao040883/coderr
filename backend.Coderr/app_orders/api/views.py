@@ -42,7 +42,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_data = {
             "customer_user": request.user.id,
             "business_user": offer.offer.user.id,
-            "title": offer.title,
+            "title": offer.offer.title,
             "revisions": offer.revisions,
             "delivery_time_in_days": offer.delivery_time_in_days,
             "price": offer.price,
