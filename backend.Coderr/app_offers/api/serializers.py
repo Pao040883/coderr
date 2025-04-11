@@ -153,6 +153,11 @@ class OfferCreateSerializer(serializers.ModelSerializer):
             for detail_data in details_data:
                 offer_type = detail_data.get("offer_type")
 
+                if not offer_type:
+                    raise serializers.ValidationError({
+                        "details": "offer_type is missing"
+                    })
+                
                 if offer_type in existing_details:
                     # Falls das Detail existiert, aktualisiere es
                     detail = existing_details[offer_type]

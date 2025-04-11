@@ -38,7 +38,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
         # Prüfen, ob der Benutzer bereits eine Bewertung für diesen Geschäftsbenutzer abgegeben hat
         if Review.objects.filter(reviewer=reviewer, business_user_id=business_user_id).exists():
-            return Response({"error": "You have already reviewed this business user."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"error": "You have already reviewed this business user."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Bewertung erstellen
         review = Review.objects.create(
