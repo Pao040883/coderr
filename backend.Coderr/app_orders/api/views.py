@@ -20,7 +20,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ['list', 'partial_update']:
-            return [IsBusinessOrderOwner()]
+            return [IsAuthenticated(), IsBusinessOrderOwner()]
         elif self.action == 'create':
             return [IsCustomerUser()]
         elif self.action in ['destroy']:
@@ -32,6 +32,14 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         if not offer_detail_id:
             return Response({"error": "offer_detail_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            offer_detail_id = int(offer_detail_id)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid request data (e.g., if 'offer_detail_id' is missing or invalid)"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
             
         try:
             offer = DetailOffer.objects.get(id=offer_detail_id)
