@@ -6,7 +6,7 @@ class IsCustomerUser(permissions.BasePermission):
 
 class IsBusinessOrderOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        return obj.business_user == request.user
+        return request.user.is_authenticated and obj.business_user == request.user
 
 class IsStaff(permissions.BasePermission):
     def has_permission(self, request, view):

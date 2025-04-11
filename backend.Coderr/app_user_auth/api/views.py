@@ -92,4 +92,4 @@ class LoginView(generics.GenericAPIView):
             "username": user.username,
             "email": user.email,
             "user_id": user.id
-        }, status=status.HTTP_201_CREATED)
+        }, status=status.HTTP_200_OK)

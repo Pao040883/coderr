@@ -32,7 +32,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         if not offer_detail_id:
             return Response({"error": "offer_detail_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+            
         try:
             offer = DetailOffer.objects.get(id=offer_detail_id)
         except DetailOffer.DoesNotExist:
