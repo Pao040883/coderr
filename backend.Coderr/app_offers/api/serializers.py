@@ -4,11 +4,12 @@ from django.db.models import Min
 from rest_framework.reverse import reverse
 
 
+# Mixin to provide user-related fields in serialized output
 class UserMixin(serializers.Serializer):
-   
     user_details = serializers.SerializerMethodField()
 
     def get_user_details(self, obj):
+        # Returns basic information about the user associated with the offer
         return {
             "first_name": obj.user.first_name if obj.user else "",
             "last_name": obj.user.last_name if obj.user else "",
@@ -16,9 +17,8 @@ class UserMixin(serializers.Serializer):
         }
 
 
-
+# Serializer for listing multiple offers with summarized data
 class OfferListSerializer(UserMixin, serializers.ModelSerializer):
-
     details = serializers.SerializerMethodField()
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
@@ -30,34 +30,39 @@ class OfferListSerializer(UserMixin, serializers.ModelSerializer):
             'created_at', 'updated_at', 'details', 'min_price', 
             'min_delivery_time', 'user_details'
         ]
-    
+
     def get_details(self, obj):
-        request = self.context.get('request')
+        # Returns a list of URLs pointing to the related offer details
         return [
             {"id": detail.id, "url": f"/offerdetails/{detail.id}/"}
             for detail in obj.details.all()
         ]
 
     def get_min_price(self, obj):
+        # Returns the lowest price among all related detail offers
         return obj.details.aggregate(Min("price"))["price__min"]
 
     def get_min_delivery_time(self, obj):
+        # Returns the shortest delivery time among all related detail offers
         return obj.details.aggregate(Min("delivery_time_in_days"))["delivery_time_in_days__min"]
 
     def validate_details(self, value):
+        # Validates that exactly 3 details are provided
         if len(value) != 3:
-            raise serializers.ValidationError({"detail": ["3 Details erforderlich"]})
-        
+            raise serializers.ValidationError({"detail": ["3 details required"]})
+
+        # Validates that one of each offer type is present: basic, standard, premium
         offer_types = {detail['offer_type'] for detail in value}
         required_type = {'basic', 'standard', 'premium'}
 
         if offer_types != required_type:
-            raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard und 1 Premium Details erforderlich"]})
-        
+            raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard, and 1 Premium detail required"]})
+
         return value
 
-class OfferSingleSerializer(UserMixin, serializers.ModelSerializer):
 
+# Serializer for a single offer (used for detail views)
+class OfferSingleSerializer(UserMixin, serializers.ModelSerializer):
     details = serializers.SerializerMethodField()
     min_price = serializers.SerializerMethodField()
     min_delivery_time = serializers.SerializerMethodField()
@@ -69,8 +74,9 @@ class OfferSingleSerializer(UserMixin, serializers.ModelSerializer):
             'created_at', 'updated_at', 'details', 'min_price', 
             'min_delivery_time', 'user_details'
         ]
-    
+
     def get_details(self, obj):
+        # Returns a list of absolute URLs for each detail using request context
         request = self.context.get('request')
         return [
             {"id": detail.id, "url": request.build_absolute_uri(f"/api/offerdetails/{detail.id}/") if request else f"/api/offerdetails/{detail.id}/"}
@@ -85,17 +91,19 @@ class OfferSingleSerializer(UserMixin, serializers.ModelSerializer):
 
     def validate_details(self, value):
         if len(value) != 3:
-            raise serializers.ValidationError({"detail": ["3 Details erforderlich"]})
-        
+            raise serializers.ValidationError({"detail": ["3 details required"]})
+
         offer_types = {detail['offer_type'] for detail in value}
         required_type = {'basic', 'standard', 'premium'}
 
         if offer_types != required_type:
-            raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard und 1 Premium Details erforderlich"]})
-        
+            raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard, and 1 Premium detail required"]})
+
         return value
 
-class OfferDetailSerializer(serializers.ModelSerializer):     
+
+# Serializer for a single detail of an offer
+class OfferDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = DetailOffer
         fields = [
@@ -103,6 +111,8 @@ class OfferDetailSerializer(serializers.ModelSerializer):
             'price', 'features', 'offer_type'
         ]
 
+
+# Serializer used when creating or updating an offer with nested details
 class OfferCreateSerializer(serializers.ModelSerializer):
     details = OfferDetailSerializer(many=True)
 
@@ -114,21 +124,21 @@ class OfferCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_details(self, value):
-        """Validiert Details nur bei der Erstellung eines neuen Offers"""
-        if self.instance is None:  # Nur für create, nicht für update
+        """Validates the details only during creation of a new offer"""
+        if self.instance is None:  # Only validate on create, not on update
             if len(value) != 3:
-                raise serializers.ValidationError({"detail": ["3 Details erforderlich"]})
+                raise serializers.ValidationError({"detail": ["3 details required"]})
 
             offer_types = {detail['offer_type'] for detail in value}
             required_types = {'basic', 'standard', 'premium'}
 
             if offer_types != required_types:
-                raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard und 1 Premium Details erforderlich"]})
+                raise serializers.ValidationError({"detail": ["1 Basic, 1 Standard, and 1 Premium detail required"]})
 
         return value
-    
+
     def create(self, validated_data):
-        """ Erstellt ein neues Angebot und speichert die Details """
+        """Creates a new offer and its associated detail entries"""
         details_data = validated_data.pop('details')
         offer = Offer.objects.create(**validated_data)
 
@@ -136,20 +146,20 @@ class OfferCreateSerializer(serializers.ModelSerializer):
             DetailOffer.objects.create(offer=offer, **detail_data)
 
         return offer
-    
+
     def update(self, instance, validated_data):
-        """ Aktualisiert das bestehende Angebot und seine Details """
+        """Updates an existing offer and its detail entries"""
         details_data = validated_data.pop('details', None)
 
-        # Aktualisiere die Offer-Felder
+        # Update the fields of the offer instance
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # Falls Details übergeben wurden, aktualisiere sie
+        # If detail data is provided, update or create related details
         if details_data is not None:
             existing_details = {detail.offer_type: detail for detail in instance.details.all()}
-            
+
             for detail_data in details_data:
                 offer_type = detail_data.get("offer_type")
 
@@ -157,15 +167,15 @@ class OfferCreateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({
                         "details": "offer_type is missing"
                     })
-                
+
                 if offer_type in existing_details:
-                    # Falls das Detail existiert, aktualisiere es
+                    # Update existing detail
                     detail = existing_details[offer_type]
                     for attr, value in detail_data.items():
                         setattr(detail, attr, value)
                     detail.save()
                 else:
-                    # Falls das Detail nicht existiert, erstelle es neu
+                    # Create new detail if not found
                     DetailOffer.objects.create(offer=instance, **detail_data)
 
         return instance

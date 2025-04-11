@@ -2,16 +2,20 @@ from rest_framework import serializers
 from ..models import Order
 from app_user_auth.models import Profile
 
+# Serializer for handling Order creation, update, and retrieval
 class OrderSerializer(serializers.ModelSerializer):
+    # customer_user must be a Profile with type 'customer'
     customer_user = serializers.PrimaryKeyRelatedField(
         queryset=Profile.objects.filter(type='customer')
     )
+
+    # business_user must be a Profile with type 'business'
     business_user = serializers.PrimaryKeyRelatedField(
         queryset=Profile.objects.filter(type='business')
     )
 
     class Meta:
-        model = Order
+        model = Order  # Specifies the model this serializer is based on
         fields = [
             'id',
             'customer_user',
@@ -27,4 +31,5 @@ class OrderSerializer(serializers.ModelSerializer):
             'updated_at'
         ]
 
-        read_only_fields = ['id', 'customer_user', 'business_user', 'created_at']  
+        # Fields that should not be editable via the API
+        read_only_fields = ['id', 'customer_user', 'business_user', 'created_at']
